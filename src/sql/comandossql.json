@@ -1,0 +1,33 @@
+// Insertar usuario
+
+{
+	"nombre": "Oscar Ali",
+	"apellido": "Mariño",
+	"nombre_usuario": "oscarali1984",
+	"fecha_nacimiento": "1985/05/25",
+	"correo": "oscar1985@gmail.com",
+	"telefono": "584126147743",
+	"clave":"1234",
+	"foto_perfil": "foto",
+    "administrador": true,
+    "suscripcion": null
+}
+
+//Insertar Producto
+
+{
+    "cantidad": 3,
+    "descripcion": "delicioso",
+    "etiqueta_dos": "alimentos",
+    "etiqueta_tres": "",
+    "etiqueta_uno": "refrescos",
+    "foto": "foto",
+    "precio": 15.0,
+    "titulo": "chocolate"
+}
+
+
+// >>> import os
+// >>> from base64 import b64encode
+// >>> b64encode(os.urandom(32)).decode("utf-8")
+
