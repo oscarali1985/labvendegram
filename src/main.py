@@ -300,6 +300,7 @@ def todos_productos():
 ##########  4.- Eliminar un producto DELETE /producto/{producto_id} ########### 
 
 @app.route('/producto/<int:producto_id>', methods=['DELETE'])
+@jwt_required
 def eliminar_producto(producto_id):
     producto = Producto.query.get(producto_id)
     if producto is None:
