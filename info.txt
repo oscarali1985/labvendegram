@@ -15,6 +15,7 @@ se escribe luego del del usuario.administrador
 // }), 201
 
 Enpoint  no requieren login
+@app.route("/ingresar", methods = ['POST'])
 @app.route("/usuario", methods=["GET", "POST"])
 @app.route('/producto', methods=["GET", "POST"])
 
