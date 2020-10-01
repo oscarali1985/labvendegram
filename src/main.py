@@ -325,6 +325,7 @@ def eliminar_producto(producto_id):
 
 ##########  5.- Actualiza el producto UPDATE /producto/{producto_id} ###########     
 @app.route('/producto/<int:producto_id>', methods=['PUT'])
+@jwt_required 
 def actualizar_producto(producto_id):
     body = request.get_json()
     producto = Producto.query.get(producto_id)

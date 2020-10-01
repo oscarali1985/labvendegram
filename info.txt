@@ -14,6 +14,13 @@ se escribe luego del del usuario.administrador
 //     "resultado": f"{usuario.correo}{usuario.administrador}{usuario.nombre}"
 // }), 201
 
-Enpoint seguros
+Enpoint  no requieren login
+@app.route("/usuario", methods=["GET", "POST"])
+@app.route('/producto', methods=["GET", "POST"])
+
+
+Enpoint seguros requieren login
 @app.route("/usuario/<id>", methods=["GET", "PUT", "DELETE"])
+@app.route('/producto/<int:producto_id>', methods=['DELETE'])
+@app.route('/producto/<int:producto_id>', methods=['PUT'])
 
