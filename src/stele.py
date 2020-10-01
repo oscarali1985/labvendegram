@@ -45,7 +45,7 @@ def sendTelegram(nombre,telegram,mensaje):
         Mensaje = "El mensaje no pudo ser enviado error {} "+descrip+ "\n"+ mensaje2
 
         #flash(Mensaje.format(errorCode), 'alert-danger')
-        return jsonify(Mensaje), 400
+        return jsonify(Mensaje.format(errorCode)), 400
     
 
     
