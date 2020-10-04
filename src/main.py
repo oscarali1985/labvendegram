@@ -11,6 +11,7 @@ from admin import setup_admin
 from models import db, Usuario, Producto
 from smail import sendEmail
 from stele import sendTelegram
+from base64 import b64encode
 from flask_jwt_simple import (
     JWTManager, jwt_required, create_jwt, get_jwt_identity
 )
@@ -63,7 +64,7 @@ def cr_usuario():
         return jsonify(usuarios_serializados), 200
         
     else:
-        #   crear una variable y asignarle diccionario con datos para crear donante
+        #   crear una variable y asignarle diccionario con datos para crear usuario
         dato_reg = request.json # request.get_json()
         if dato_reg is None:
             return jsonify({
@@ -74,7 +75,7 @@ def cr_usuario():
             "nombre" not in dato_reg or
             "apellido" not in  dato_reg or
             "nombre_usuario" not in dato_reg or
-            #"fecha_nacimiento"not in dato_reg or
+            "fecha_nacimiento"not in dato_reg or
             "correo" not in dato_reg or
             "telefono" not in dato_reg or
             "clave" not in dato_reg
@@ -106,7 +107,7 @@ def cr_usuario():
         print(validcorreo)
         if validcorreo == True:
 
-            #   crear una variable y asignarle el nuevo donante con los datos validados
+            #   crear una variable y asignarle el nuevo usuario con los datos validados
             nuevo_usuario = Usuario.registrarse(
                 dato_reg["nombre"].lower().capitalize(),
                 dato_reg["apellido"].lower().capitalize(),
@@ -124,13 +125,13 @@ def cr_usuario():
             db.session.add(nuevo_usuario)
             try:
                 db.session.commit()
-                titulocorreo= "Registro satisfactorio"
-                nombre=dato_reg["nombre"]
-                correo=dato_reg["correo"]
-                nombreusuario=dato_reg["nombre_usuario"]
-                mensaje = f"gracias por registrarse su usuario es {nombreusuario}"
-                email = sendEmail(titulocorreo, nombre, correo, mensaje)
-                # devolvemos el nuevo donante serializado y 201_CREATED
+                #titulocorreo= "Registro satisfactorio"
+                #nombre=dato_reg["nombre"]
+                #correo=dato_reg["correo"]
+                #nombreusuario=dato_reg["nombre_usuario"]
+                #mensaje = f"gracias por registrarse su usuario es {nombreusuario}"
+                #email = sendEmail(titulocorreo, nombre, correo, mensaje)
+                # devolvemos el nuevo usuario serializado y 201_CREATED
                 return jsonify(nuevo_usuario.serializar()), 201
             except Exception as error:
                 db.session.rollback()
@@ -164,51 +165,61 @@ def crud_usuario(id):
     print(usuario_id_jwt)
     print(usuario)
     print(admin)
-    # crear una variable y asignar el donante específico
-    usuario = Usuario.query.get(id)
-    # verificar si el donante con id donante_id existe
-    if isinstance(usuario, Usuario):
-        if request.method == "GET":
-            # devolver el donante serializado y jsonificado. Y 200
-            return jsonify(usuario.serializar()), 200
-        elif request.method == "PUT":
-            # recuperar diccionario con insumos del body del request
-            diccionario = request.get_json()
-            # actualizar propiedades que vengan en el diccionario
-            print(diccionario)
-            usuario.actualizar_usuario(diccionario)
-            # guardar en base de datos, hacer commit
-            try:
-                db.session.commit()
-                # devolver el donante serializado y jsonificado. Y 200 
-                return jsonify(usuario.serializar()), 200
-            except Exception as error:
-                db.session.rollback()
-                print(f"{error.args} {type(error)}")
+
+    if (admin == True):
+        #
+        # crear una variable y asignar el usuario específico
+            usuario = Usuario.query.get(id)
+            # verificar si el usuario con id usuario_id existe
+            if isinstance(usuario, Usuario):
+                if request.method == "GET":
+                    # devolver el usuario serializado y jsonificado. Y 200
+                    return jsonify(usuario.serializar()), 200
+                elif request.method == "PUT":
+                    # recuperar diccionario con insumos del body del request
+                    diccionario = request.get_json()
+                    # actualizar propiedades que vengan en el diccionario
+                    print(diccionario)
+                    usuario.actualizar_usuario(diccionario)
+                    # guardar en base de datos, hacer commit
+                    try:
+                        db.session.commit()
+                        # devolver el usuario serializado y jsonificado. Y 200 
+                        return jsonify(usuario.serializar()), 200
+                    except Exception as error:
+                        db.session.rollback()
+                        print(f"{error.args} {type(error)}")
+                        return jsonify({
+                            "resultado": f"{error.args}"
+                        }), 500
+                else:
+                    # remover el usuario específico de la sesión de base de datos
+                    db.session.delete(usuario)
+                    # hacer commit y devolver 204
+                    try:
+                        db.session.commit()
+                        return jsonify({
+                            "resultado": "el contacto fue eliminado"
+                        }), 204
+                    except Exception as error:
+                        db.session.rollback()
+                        print(f"{error.args} {type(error)}")
+                        return jsonify({
+                            "resultado": f"{error.args}"
+                        }), 500
+            else:
+                # el usuario no existe!
                 return jsonify({
-                    "resultado": f"{error.args}"
-                }), 500
-        else:
-            # remover el donante específico de la sesión de base de datos
-            db.session.delete(usuario)
-            # hacer commit y devolver 204
-            try:
-                db.session.commit()
-                return jsonify({
-                    "resultado": "el contacto fue eliminado"
-                }), 204
-            except Exception as error:
-                db.session.rollback()
-                print(f"{error.args} {type(error)}")
-                return jsonify({
-                    "resultado": f"{error.args}"
-                }), 500
+                    "resultado": "el contacto que ingreso no existe..."
+                }), 404
+
     else:
         # el usuario no existe!
         return jsonify({
-            "resultado": "el contacto que ingreso no existe..."
-        }), 404
+                    "resultado": "No tiene permiso para realizar esta operacion"
+                }), 404
 
+    
 
 
 ########################201
@@ -280,14 +291,14 @@ def todos_productos():
         body = request.get_json()        
         producto = Producto(titulo=body['titulo'], foto=body['foto'], descripcion=body['descripcion'],
         precio=body['precio'], cantidad=body['cantidad'], etiqueta_uno=body['etiqueta_uno'], 
-        etiqueta_dos=body['etiqueta_dos'],etiqueta_tres=body['etiqueta_tres'])
+        etiqueta_dos=body['etiqueta_dos'],etiqueta_tres=body['etiqueta_tres'],etiqueta_general=body['etiqueta_general'])
         #   agregar a la sesión de base de datos (sqlalchemy) y hacer commit de la transacción
         print("imprimiento")
         print (jsonify(producto.serialize()))
         db.session.add(producto)
         try:
             db.session.commit()
-            # devolvemos el nuevo donante serializado y 201_CREATED
+            # devolvemos el nuevo usuario serializado y 201_CREATED
             return jsonify(producto.serialize()), 201
         except Exception as error:
             db.session.rollback()
@@ -300,7 +311,6 @@ def todos_productos():
 ##########  4.- Eliminar un producto DELETE /producto/{producto_id} ########### 
 
 @app.route('/producto/<int:producto_id>', methods=['DELETE'])
-@jwt_required
 def eliminar_producto(producto_id):
     producto = Producto.query.get(producto_id)
     if producto is None:
@@ -325,7 +335,6 @@ def eliminar_producto(producto_id):
 
 ##########  5.- Actualiza el producto UPDATE /producto/{producto_id} ###########     
 @app.route('/producto/<int:producto_id>', methods=['PUT'])
-@jwt_required 
 def actualizar_producto(producto_id):
     body = request.get_json()
     producto = Producto.query.get(producto_id)
@@ -450,7 +459,178 @@ def manejar_ingreso():
             }), 400
 
 
+#Obtiene usuarios segun su id para acualizar o eliminar solo por admin
+@app.route("/cambiouclauario/<id>", methods=["PUT"])
+@jwt_required
 
+def cambiocusuario(id):
+    """
+        PUT Se actualiza la clave del usuario. Se debe enviar la clave
+    """
+    usuario_id_jwt = get_jwt_identity()
+    usuario= Usuario.query.get(usuario_id_jwt)
+    admin = usuario.administrador
+    print(usuario_id_jwt)
+    print(usuario)
+    print(admin)
+
+    if (admin == True):
+        #
+        # crear una variable y asignar el usuario específico
+            usuario = Usuario.query.get(id)
+            # verificar si el usuario con id usuario_id existe
+            if isinstance(usuario, Usuario):
+                if request.method == "PUT":
+                    # recuperar diccionario con insumos del body del request
+                    diccionario = request.get_json()
+                    # actualizar propiedades que vengan en el diccionario
+                    print(diccionario)
+                    usuario.actualizar_clave(diccionario)
+                    # guardar en base de datos, hacer commit
+                    try:
+                        db.session.commit()
+                        # devolver el usuario serializado y jsonificado. Y 200 
+                        return jsonify({
+                                        "resultado": f"La clave del usuario {usuario.id} ha sido actualizada"
+                                    }), 200
+                    except Exception as error:
+                        db.session.rollback()
+                        print(f"{error.args} {type(error)}")
+                        return jsonify({
+                            "resultado": f"{error.args}"
+                        }), 500
+
+            else:
+                # el usuario no existe!
+                return jsonify({
+                    "resultado": "el contacto que ingreso no existe..."
+                }), 404
+
+    else:
+        # el usuario no existe!
+        return jsonify({
+                    "resultado": "No tiene permiso para realizar esta operacion"
+                }), 404
+
+@app.route("/cambioclaveale/<id>", methods=["PUT",])
+@jwt_required
+
+def cambioclavealetaria(id):
+    """
+        PUT actualizar la clave de un usuario en particular
+    """
+    usuario_id_jwt = get_jwt_identity()
+    usuario= Usuario.query.get(usuario_id_jwt)
+    admin = usuario.administrador
+    print(usuario_id_jwt)
+    print(usuario)
+    print(admin)
+
+    if (admin == True):
+        #
+        # crear una variable y asignar el usuario específico
+            usuario = Usuario.query.get(id)
+            # verificar si el usuario con id usuario_id existe
+            if isinstance(usuario, Usuario):
+                if request.method == "PUT":
+                    # recuperar diccionario con insumos del body del request
+                    nuevaclave = b64encode(os.urandom(4)).decode("utf-8")
+                    # actualizar propiedades que vengan en el diccionario
+                    usuario.actualizar_clavealeatoria(nuevaclave)
+                    # guardar en base de datos, hacer commit
+                    try:
+                        db.session.commit()
+                        titulocorreo= "Cambio de clave satisfactorio"
+                        nombre=usuario.nombre
+                        correo=usuario.correo
+                        mensaje = f"Se ha realizado un cambio de clave '{nuevaclave}' "
+                        email = sendEmail(titulocorreo, nombre, correo, mensaje)
+                        # devolver el usuario serializado y jsonificado. Y 200 
+                        return jsonify({
+                                        "resultado": f"La clave del usuario {usuario.id} ha sido actualizada y enviada por correo"
+                                    }), 200
+                    except Exception as error:
+                        db.session.rollback()
+                        print(f"{error.args} {type(error)}")
+                        return jsonify({
+                            "resultado": f"{error.args}"
+                        }), 500
+
+            else:
+                # el usuario no existe!
+                return jsonify({
+                    "resultado": "el contacto que ingreso no existe..."
+                }), 404
+
+    else:
+        # el usuario no existe!
+        return jsonify({
+                    "resultado": "No tiene permiso para realizar esta operacion"
+                }), 404
+
+@app.route("/cambioclavecorreo/<nombre_usuario>", methods=["PUT"])
+
+
+def cambioclavecorreo(nombre_usuario):
+    """
+        PUT actualizar la clave de un usuario en particular
+    """
+    usuariob = nombre_usuario
+    correovalid=False
+    usuariovalid= False
+    print(usuariob)
+    # crear una variable y asignar el usuario específico
+    usuario=Usuario.query.filter(Usuario.nombre_usuario.like(usuariob))
+    correo=Usuario.query.filter(Usuario.correo.like(usuariob))
+    #usuario = Usuario.query.filter(OR (Usuario.nombre_usuario.like(usuariob), Usuario.correo.like(usuariob)))
+    #usuario = Usuario.query.filter(Usuario.nombre_usuario == "oscaralidiaz")
+    #usuario = Usuario.query.get(nombre_usuario)
+    for row in usuario:
+        if (row.nombre_usuario==usuariob):
+            usuariovalid= True
+            usuario = Usuario.query.get(row.id)
+        print ("ID:", row.id, "Name: ",row.nombre_usuario, "Email:",row.correo)
+    for row in correo:
+        if (row.correo==usuariob):
+            correovalid= True
+            usuario = Usuario.query.get(row.id)
+        print ("ID:", row.id, "Name: ",row.nombre_usuario, "Email:",row.correo)    
+    
+    #print(usuario)
+    
+    
+    # verificar si el usuario con id usuario_id existe
+    if (correovalid== True or usuariovalid== True):
+        print(usuario)
+        if request.method == "PUT":
+            # recuperar diccionario con insumos del body del request
+            nuevaclave = b64encode(os.urandom(4)).decode("utf-8")
+            # actualizar propiedades que vengan en el diccionario
+            usuario.actualizar_clavealeatoria(nuevaclave)
+            # guardar en base de datos, hacer commit
+            try:
+                db.session.commit()
+                titulocorreo= "Cambio de clave satisfactorio"
+                nombre=usuario.nombre
+                correo=usuario.correo
+                mensaje = f"Se ha realizado un cambio de clave '{nuevaclave}' "
+                email = sendEmail(titulocorreo, nombre, correo, mensaje)
+                # devolver el usuario serializado y jsonificado. Y 200 
+                return jsonify({
+                                "resultado": f"La clave del usuario {usuario.id} ha sido actualizada y enviada por correo"
+                                }), 200
+            except Exception as error:
+                db.session.rollback()
+                print(f"{error.args} {type(error)}")
+                return jsonify({
+                        "resultado": f"{error.args}"
+                    }), 500
+
+    else:
+        # el usuario no existe!
+        return jsonify({
+                    "resultado": "el contacto que ingreso no existe..."
+                }), 404
 
 
 # this only runs if `$ python src/main.py` is executed

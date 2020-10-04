@@ -4,9 +4,11 @@ import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+
 '''
 app.config.update(
-	DEBUG=False,
+	DEBUG=True,
 	#EMAIL SETTINGS
 	MAIL_SERVER='smtp.gmail.com',
 	MAIL_PORT=465,
@@ -14,11 +16,14 @@ app.config.update(
 	MAIL_USERNAME = 'vendegram@gmail.com',
 	)
 mail = Mail(app)
-'''
 
+
+'''
 def sendEmail(titulocorreo,nombre,correo,men):
     # create message object instance
     msg = MIMEMultipart()
+    
+    
     
     message = nombre+ "\n"+men+ "\n" + "\n"+" Gracias Recuerde que puede visitar nuestro bot en telegram"
     
