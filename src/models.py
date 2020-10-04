@@ -7,19 +7,6 @@ from base64 import b64encode
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-# Mas importacionesfrom 
-
-
-
-
-
-
-
-# Mas importaciones
-
-
-
-
 db = SQLAlchemy()
 
 
@@ -223,6 +210,7 @@ class Usuario(db.Model):
 
 
 
+
 ########################191
 #
 #    Tienda
@@ -369,7 +357,6 @@ class Tienda(db.Model):
             "zona_tres": self.zona_tres.value if self.zona_tres else ""
             # "groups": [subscription.group_id for subscription in self.subscriptions] ayuda para etiqueta
             }    
-             
 
 
 

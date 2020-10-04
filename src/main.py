@@ -25,6 +25,8 @@ db.init_app(app)
 jwt = JWTManager(app)
 CORS(app)
 setup_admin(app)
+
+
 # Maneja/sereliza errores como un objeto JSON 26
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
@@ -33,7 +35,14 @@ def handle_invalid_usage(error):
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
-########################35
+
+
+
+
+
+
+
+########################45
 #
 #    Usuarios
 #
@@ -59,7 +68,7 @@ def cr_usuario():
             usuarios_filtrados = usuarios
         #   serializar los objetos de la lista - tendría una lista de diccionarios
         usuarios_serializados = list(map(lambda usuario: usuario.serializar(), usuarios_filtrados))
-        print(usuarios_serializados)
+        #print(usuarios_serializados)
         #   devolver la lista jsonificada y 200_OK
         return jsonify(usuarios_serializados), 200
         
@@ -103,8 +112,8 @@ def cr_usuario():
 
         # Se procede a validar el correo
         validcorreo = validate_email_syntax(dato_reg["correo"])
-        print("Validando correo")
-        print(validcorreo)
+        #print("Validando correo")
+        #print(validcorreo)
         if validcorreo == True:
 
             #   crear una variable y asignarle el nuevo usuario con los datos validados
@@ -162,9 +171,9 @@ def crud_usuario(id):
     usuario_id_jwt = get_jwt_identity()
     usuario= Usuario.query.get(usuario_id_jwt)
     admin = usuario.administrador
-    print(usuario_id_jwt)
-    print(usuario)
-    print(admin)
+    #print(usuario_id_jwt)
+    #print(usuario)
+    #print(admin)
 
     if (admin == True):
         #
@@ -179,7 +188,7 @@ def crud_usuario(id):
                     # recuperar diccionario con insumos del body del request
                     diccionario = request.get_json()
                     # actualizar propiedades que vengan en el diccionario
-                    print(diccionario)
+                    #print(diccionario)
                     usuario.actualizar_usuario(diccionario)
                     # guardar en base de datos, hacer commit
                     try:
@@ -222,36 +231,330 @@ def crud_usuario(id):
     
 
 
+
+
+########################235
+#
+#    Tienda
+#
+########################
+
+###################        CRUD de Vendegram !!!    ######################  
+#####  1.-Obtenga una lista de todos las tiendas GET /tienda;                         tambien filtra por nombre si recibe el parametro en la url   #########
+    ##########  2.- Crear un nuevo tienda POST / ########### 
+
+@app.route('/tienda', methods=["GET", "POST"])
+
+def todos_tiendas():
+    if request.method == "GET":
+        tienda = Tienda.query.all()
+        # verificamos si hay parámetros en la url y filtramos la lista con eso si titulo no esta vacio producto_filtrado busca en producto.titulo si el requerimiento es igual a algun titulo ya creado para filtrarlo.
+        nombre_tienda = request.args.get("nombre_tienda")
+        if nombre_tienda is not None:
+            tienda_filtrado = filter(lambda tienda: nombre_tienda.lower() in tienda.nombre_tienda, tienda) 
+        else:
+            tienda_filtrado = tienda
+        #   serializar los objetos de la lista - tendría una lista de diccionarios
+        tienda_lista = list(map(lambda tienda: tienda.serialize(), tienda_filtrado))     
+        return jsonify(tienda_lista), 200
+   ###Validaciones de caracteres y que los campos no esten vacios###
+    else:
+        insumos_tienda = request.json
+        if insumos_tienda is None:
+            return jsonify({
+                "resultado": "no envio insumos para crear la tienda" 
+            }), 400
+         # verificar que el diccionario tenga titulo, descripcion, foto,etc
+        if (
+            "nombre_tienda" not in insumos_tienda or
+            "correo_tienda" not in insumos_tienda or
+            "telefono_tienda" not in insumos_tienda or
+            "foto_tienda" not in insumos_tienda or
+            "zona_general" not in insumos_tienda or
+            "zona_uno" not in insumos_tienda or
+            "zona_dos" not in insumos_tienda
+        ):
+            return jsonify({
+                "resultado": "revise las propiedades de su solicitud"
+            }), 400
+        #validar que campos no vengan vacíos y que los string tenga sus respectivos caracteres
+        if (
+            insumos_tienda["nombre_tienda"] == "" or
+            # insumos_producto["descripcion"] == "" or
+            insumos_tienda["correo_tienda"] == "" or
+            insumos_tienda["zona_general"] == "" or 
+            # insumos_producto["etiqueta_uno"] == "" or         
+            len(str(insumos_tienda["nombre_tienda"])) > 40 or
+            # len(str(insumos_producto["descripcion"])) > 2000 or
+            len(str(insumos_tienda["correo_tienda"])) > 30
+            # int(insumos_producto["cantidad"]) < 0 or
+            # float(insumos_producto["precio"]) < 0
+
+        ):
+            return jsonify({
+                "resultado": "revise los valores de su solicitud"
+            }), 400
+
+        # METODO POST: crear una variable y asignarle el nuevo producto con los datos validados
+        body = request.get_json()        
+        tienda = Tienda(nombre_tienda=body['nombre_tienda'], correo_tienda=body['correo_tienda'], telefono_tienda=body['telefono_tienda'],
+        foto_tienda=body['foto_tienda'], facebook_tienda=body['facebook_tienda'], instagram_tienda=body['instagram_tienda'], 
+        twitter_tienda=body['twitter_tienda'],zona_general=body['zona_general'],zona_uno=body['zona_uno'],zona_dos=body['zona_dos'],zona_tres=body['zona_tres'])
+        #   agregar a la sesión de base de datos (sqlalchemy) y hacer commit de la transacción
+        print("imprimiento")
+        print (jsonify(tienda.serialize()))
+        db.session.add(tienda)
+        try:
+            db.session.commit()
+            # devolvemos el nuevo donante serializado y 201_CREATED
+            return jsonify(tienda.serialize()), 201
+        except Exception as error:
+            db.session.rollback()
+            print(f"{error.args} {type(error)}")
+            # devolvemos "mira, tuvimos este error..."
+            return jsonify({
+                "resultado2": f"{error.args}"
+            }), 500
+
+##########  4.- Eliminar un producto DELETE /producto/{producto_id} ########### 
+
+@app.route('/tienda/<int:tienda_id>', methods=['DELETE'])
+def eliminar_tienda(tienda_id):
+    tienda = Tienda.query.get(tienda_id)
+    if tienda is None:
+        raise APIException('tienda no encontrado', status_code=404)
+    else:
+        # remover el tienda específico de la sesión de base de datos
+        db.session.delete(tienda)
+        # hacer commit y devolver 200
+        try:
+            db.session.commit()
+            response_body = {
+           "msg": "La tienda a sido eliminado"
+           }
+            return jsonify(response_body), 200
+        except Exception as error:
+            db.session.rollback()
+            print(f"{error.args} {type(error)}")
+            return jsonify({
+                "resultado al eliminar una tienda": f"{error.args}"
+            }), 500
+
+
+##########  5.- Actualiza el tienda UPDATE /producto/{producto_id} ###########     
+@app.route('/tienda/<int:tienda_id>', methods=['PUT'])
+def actualizar_tienda(tienda_id):
+    body = request.get_json()
+    tienda = Tienda.query.get(tienda_id)
+    if tienda is None:
+        raise APIException('tienda no encontrado', status_code=404) 
+    tienda.update(body)
+    try:
+        db.session.commit()
+        # devolvemos el nuevo tienda serializado y 200_CREATED
+        return jsonify(tienda.serialize()), 200
+    except Exception as error:
+        db.session.rollback()
+        print(f"{error.args} {type(error)}")
+        # devolvemos "mira, tuvimos este error..."
+        return jsonify({
+            "Presente error al actualizar un tienda": f"{error.args}"
+        }), 500    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ########################201
 #
 #    Productos
 #
-######################## 211
+########################
 
-
-###################        CRUD de Vendegram !!!    ######################  214
-#####  1.-Obtenga una lista de todos los productos GET /producto;                         tambien filtra por nombre si recibe el parametro en la url   #########
-    ##########  2.- Crear un nuevo producto POST /producto ########### 
 
 ###################        CRUD de Vendegram !!!    ######################  
 #####  1.-Obtenga una lista de todos los productos GET /producto;                         tambien filtra por nombre si recibe el parametro en la url   #########
     ##########  2.- Crear un nuevo producto POST /producto ########### 
 
-@app.route('/producto', methods=["GET", "POST"])
+@app.route('/producto', methods=["GET"])
 
 def todos_productos():
     if request.method == "GET":
         producto = Producto.query.all()
         # verificamos si hay parámetros en la url y filtramos la lista con eso si titulo no esta vacio producto_filtrado busca en producto.titulo si el requerimiento es igual a algun titulo ya creado para filtrarlo.
         titulo = request.args.get("titulo")
-        if titulo is not None:
-            producto_filtrado = filter(lambda producto: titulo.lower() in producto.titulo, producto) 
+        etiqueta = request.args.get("etiqueta")
+        zona = request.args.get("zona")
+        match_all = request.args.get("all")
+
+        if titulo is not None and etiqueta is None and zona is None:
+            producto_filtrado = filter(lambda producto:(
+            titulo.lower() in producto.titulo.lower()), producto)
         else:
-            producto_filtrado = producto
-        #   serializar los objetos de la lista - tendría una lista de diccionarios
-        producto_lista = list(map(lambda producto: producto.serialize(), producto_filtrado))     
+            producto_filtrado = producto    
+
+            if etiqueta is not None and titulo is None and zona is None:
+                producto_filtrado = filter(lambda producto:(
+                str(etiqueta) in str(producto.etiqueta_general).lower() or
+                str(etiqueta) in str(producto.etiqueta_uno).lower() or
+                str(etiqueta) in str(producto.etiqueta_dos).lower() or
+                str(etiqueta) in str(producto.etiqueta_tres).lower()), producto)
+            else:
+                producto_filtrado = producto
+
+                if zona is not None and titulo is None and etiqueta is None:
+                    producto_filtrado = filter(lambda producto:(
+                    str(zona) in str(producto.tienda.zona_general).lower() or
+                    str(zona) in str(producto.tienda.zona_uno).lower() or
+                    str(zona) in str(producto.tienda.zona_dos).lower() or
+                    str(zona) in str(producto.tienda.zona_tres).lower()), producto)
+                else:
+                    producto_filtrado = producto 
+
+                    if titulo and etiqueta is not None and zona is None:
+                        producto_filtrado = filter(lambda producto:(
+                        titulo.lower() in producto.titulo.lower() and 
+                        str(etiqueta) in str(producto.etiqueta_general).lower() or
+                        titulo.lower() in producto.titulo.lower() and 
+                        str(etiqueta) in str(producto.etiqueta_uno).lower() or
+                        titulo.lower() in producto.titulo.lower() and 
+                        str(etiqueta) in str(producto.etiqueta_dos).lower() or
+                        titulo.lower() in producto.titulo.lower() and 
+                        str(etiqueta) in str(producto.etiqueta_tres).lower()), producto)
+                    else:
+                        producto_filtrado = producto
+                        
+                        if titulo and zona is not None and etiqueta is None:
+                            producto_filtrado = filter(lambda producto:(
+                            titulo.lower() in producto.titulo.lower() and
+                            str(zona) in str(producto.tienda.zona_general).lower() or
+                            titulo.lower() in producto.titulo.lower() and
+                            str(zona) in str(producto.tienda.zona_uno).lower() or
+                            titulo.lower() in producto.titulo.lower() and
+                            str(zona) in str(producto.tienda.zona_dos).lower() or
+                            titulo.lower() in producto.titulo.lower() and
+                            str(zona) in str(producto.tienda.zona_tres).lower()), producto)
+                        else:
+                            producto_filtrado = producto
+
+                            if etiqueta and zona is not None and titulo is None:
+                                producto_filtrado = filter(lambda producto:(
+                                str(etiqueta) in str(producto.etiqueta_general).lower() and
+                                str(zona) in str(producto.tienda.zona_general).lower() or
+                                str(etiqueta) in str(producto.etiqueta_general).lower() and
+                                str(zona) in str(producto.tienda.zona_uno).lower() or 
+                                str(etiqueta) in str(producto.etiqueta_general).lower() and
+                                str(zona) in str(producto.tienda.zona_dos).lower() or 
+                                str(etiqueta) in str(producto.etiqueta_general).lower() and
+                                str(zona) in str(producto.tienda.zona_tres).lower() or
+
+                                str(etiqueta) in str(producto.etiqueta_uno).lower() and
+                                str(zona) in str(producto.tienda.zona_general).lower() or 
+                                str(etiqueta) in str(producto.etiqueta_uno).lower() and
+                                str(zona) in str(producto.tienda.zona_uno).lower() or 
+                                str(etiqueta) in str(producto.etiqueta_uno).lower() and
+                                str(zona) in str(producto.tienda.zona_dos).lower() or  
+                                str(etiqueta) in str(producto.etiqueta_uno).lower() and
+                                str(zona) in str(producto.tienda.zona_tres).lower() or 
+
+                                str(etiqueta) in str(producto.etiqueta_dos).lower() and
+                                str(zona) in str(producto.tienda.zona_general).lower() or 
+                                str(etiqueta) in str(producto.etiqueta_dos).lower() and
+                                str(zona) in str(producto.tienda.zona_uno).lower() or 
+                                str(etiqueta) in str(producto.etiqueta_dos).lower() and
+                                str(zona) in str(producto.tienda.zona_dos).lower() or  
+                                str(etiqueta) in str(producto.etiqueta_dos).lower() and
+                                str(zona) in str(producto.tienda.zona_tres).lower() or 
+
+                                str(etiqueta) in str(producto.etiqueta_tres).lower() and
+                                str(zona) in str(producto.tienda.zona_general).lower() or 
+                                str(etiqueta) in str(producto.etiqueta_tres).lower() and
+                                str(zona) in str(producto.tienda.zona_uno).lower() or 
+                                str(etiqueta) in str(producto.etiqueta_tres).lower() and
+                                str(zona) in str(producto.tienda.zona_dos).lower() or  
+                                str(etiqueta) in str(producto.etiqueta_tres).lower() and
+                                str(zona) in str(producto.tienda.zona_tres).lower() 
+                                ), producto)
+                            else:
+                                producto_filtrado = producto
+
+                                if titulo and etiqueta and zona is not None:
+                                    if match_all == "True":
+                                        producto_filtrado = filter(lambda producto: ( 
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_general).lower() and 
+                                            str(zona) in str(producto.tienda.zona_general).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_general).lower() and 
+                                            str(zona) in str(producto.tienda.zona_uno).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_general).lower() and 
+                                            str(zona) in str(producto.tienda.zona_dos).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_general).lower() and 
+                                            str(zona) in str(producto.tienda.zona_tres).lower() or 
+
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_uno).lower() and 
+                                            str(zona) in str(producto.tienda.zona_general).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_uno).lower() and 
+                                            str(zona) in str(producto.tienda.zona_uno).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_uno).lower() and 
+                                            str(zona) in str(producto.tienda.zona_dos).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_uno).lower() and 
+                                            str(zona) in str(producto.tienda.zona_tres).lower() or
+                                            
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_dos).lower() and 
+                                            str(zona) in str(producto.tienda.zona_general).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_dos).lower() and 
+                                            str(zona) in str(producto.tienda.zona_uno).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_dos).lower() and 
+                                            str(zona) in str(producto.tienda.zona_dos).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_dos).lower() and 
+                                            str(zona) in str(producto.tienda.zona_tres).lower() or
+
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_tres).lower() and 
+                                            str(zona) in str(producto.tienda.zona_general).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_tres).lower() and 
+                                            str(zona) in str(producto.tienda.zona_uno).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_tres).lower() and 
+                                            str(zona) in str(producto.tienda.zona_dos).lower() or
+                                            titulo.lower() in producto.titulo.lower() and 
+                                            str(etiqueta) in str(producto.etiqueta_tres).lower() and 
+                                            str(zona) in str(producto.tienda.zona_tres).lower() 
+                                            ), producto)              
+                                    else:
+                                        producto_filtrado = filter(lambda producto: ( 
+                                            titulo.lower() in producto.titulo.lower() or 
+                                            str(etiqueta) in str(producto.etiqueta_general).lower() or 
+                                            str(zona) in str(producto.tienda.zona_general).lower()
+                                            ), producto)
+                                else:
+                                    producto_filtrado = producto
+        producto_lista = list(map(lambda producto: producto.serialize(), producto_filtrado))
         return jsonify(producto_lista), 200
-    ###Validaciones de caracteres y que los campos no esten vacios###
     else:
         insumos_producto = request.json
         if insumos_producto is None:
@@ -265,7 +568,8 @@ def todos_productos():
             "foto" not in insumos_producto or
             "cantidad" not in insumos_producto or
             "precio" not in insumos_producto or
-           "etiqueta_uno" not in insumos_producto
+            "etiqueta_general" not in insumos_producto or
+            "etiqueta_uno" not in insumos_producto
         ):
             return jsonify({
                 "resultado": "revise las propiedades de su solicitud"
@@ -275,6 +579,7 @@ def todos_productos():
             insumos_producto["titulo"] == "" or
             insumos_producto["descripcion"] == "" or
             insumos_producto["foto"] == "" or
+            insumos_producto["etiqueta_general"] == "" or 
             insumos_producto["etiqueta_uno"] == "" or         
             len(str(insumos_producto["titulo"])) > 100 or
             len(str(insumos_producto["descripcion"])) > 2000 or
@@ -287,18 +592,23 @@ def todos_productos():
                 "resultado": "revise los valores de su solicitud"
             }), 400
 
+
+@app.route('/producto', methods=["POST"])
+
+def post_productos():
+        if request.method == "POST":
         # METODO POST: crear una variable y asignarle el nuevo producto con los datos validados
-        body = request.get_json()        
-        producto = Producto(titulo=body['titulo'], foto=body['foto'], descripcion=body['descripcion'],
-        precio=body['precio'], cantidad=body['cantidad'], etiqueta_uno=body['etiqueta_uno'], 
-        etiqueta_dos=body['etiqueta_dos'],etiqueta_tres=body['etiqueta_tres'],etiqueta_general=body['etiqueta_general'])
-        #   agregar a la sesión de base de datos (sqlalchemy) y hacer commit de la transacción
-        print("imprimiento")
-        print (jsonify(producto.serialize()))
-        db.session.add(producto)
+            body = request.get_json()        
+            producto = Producto(titulo=body['titulo'], foto=body['foto'], descripcion=body['descripcion'],
+            precio=body['precio'], cantidad=body['cantidad'], etiqueta_uno=body['etiqueta_uno'], 
+            etiqueta_dos=body['etiqueta_dos'],etiqueta_tres=body['etiqueta_tres'],etiqueta_general=body['etiqueta_general'])
+            #   agregar a la sesión de base de datos (sqlalchemy) y hacer commit de la transacción
+            print("imprimiento")
+            print (jsonify(producto.serialize()))
+            db.session.add(producto)
         try:
             db.session.commit()
-            # devolvemos el nuevo usuario serializado y 201_CREATED
+            # devolvemos el nuevo donante serializado y 201_CREATED
             return jsonify(producto.serialize()), 201
         except Exception as error:
             db.session.rollback()
@@ -352,20 +662,6 @@ def actualizar_producto(producto_id):
         return jsonify({
             "Presente error al actualizar un producto": f"{error.args}"
         }), 500    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -470,9 +766,9 @@ def cambiocusuario(id):
     usuario_id_jwt = get_jwt_identity()
     usuario= Usuario.query.get(usuario_id_jwt)
     admin = usuario.administrador
-    print(usuario_id_jwt)
-    print(usuario)
-    print(admin)
+    #print(usuario_id_jwt)
+    #print(usuario)
+    #print(admin)
 
     if (admin == True):
         #
@@ -484,7 +780,7 @@ def cambiocusuario(id):
                     # recuperar diccionario con insumos del body del request
                     diccionario = request.get_json()
                     # actualizar propiedades que vengan en el diccionario
-                    print(diccionario)
+                    #print(diccionario)
                     usuario.actualizar_clave(diccionario)
                     # guardar en base de datos, hacer commit
                     try:
@@ -522,9 +818,9 @@ def cambioclavealetaria(id):
     usuario_id_jwt = get_jwt_identity()
     usuario= Usuario.query.get(usuario_id_jwt)
     admin = usuario.administrador
-    print(usuario_id_jwt)
-    print(usuario)
-    print(admin)
+    #print(usuario_id_jwt)
+    #print(usuario)
+    #print(admin)
 
     if (admin == True):
         #
@@ -578,7 +874,7 @@ def cambioclavecorreo(nombre_usuario):
     usuariob = nombre_usuario
     correovalid=False
     usuariovalid= False
-    print(usuariob)
+    #print(usuariob)
     # crear una variable y asignar el usuario específico
     usuario=Usuario.query.filter(Usuario.nombre_usuario.like(usuariob))
     correo=Usuario.query.filter(Usuario.correo.like(usuariob))
@@ -589,19 +885,19 @@ def cambioclavecorreo(nombre_usuario):
         if (row.nombre_usuario==usuariob):
             usuariovalid= True
             usuario = Usuario.query.get(row.id)
-        print ("ID:", row.id, "Name: ",row.nombre_usuario, "Email:",row.correo)
+        #print ("ID:", row.id, "Name: ",row.nombre_usuario, "Email:",row.correo)
     for row in correo:
         if (row.correo==usuariob):
             correovalid= True
             usuario = Usuario.query.get(row.id)
-        print ("ID:", row.id, "Name: ",row.nombre_usuario, "Email:",row.correo)    
+        #print ("ID:", row.id, "Name: ",row.nombre_usuario, "Email:",row.correo)    
     
     #print(usuario)
     
     
     # verificar si el usuario con id usuario_id existe
     if (correovalid== True or usuariovalid== True):
-        print(usuario)
+        #print(usuario)
         if request.method == "PUT":
             # recuperar diccionario con insumos del body del request
             nuevaclave = b64encode(os.urandom(4)).decode("utf-8")
