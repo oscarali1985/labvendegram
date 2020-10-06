@@ -412,12 +412,7 @@ class Tienda(db.Model):
             "zona_uno": self.zona_uno.value if self.zona_uno else "",
             "zona_dos": self.zona_dos.value if self.zona_dos else "",
             "zona_tres": self.zona_tres.value if self.zona_tres else "",
-<<<<<<< HEAD
-            "usuario_id": self.usuario_id,
-            "producto": lista_id
-=======
             "productos": lista_id
->>>>>>> develop
             # "groups": [subscription.group_id for subscription in self.subscriptions] ayuda para etiqueta
             }    
 
