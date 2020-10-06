@@ -434,7 +434,7 @@ def todos_tiendas():
         body = request.get_json()        
         tienda = Tienda(nombre_tienda=body['nombre_tienda'], correo_tienda=body['correo_tienda'], telefono_tienda=body['telefono_tienda'],
         foto_tienda=body['foto_tienda'], facebook_tienda=body['facebook_tienda'], instagram_tienda=body['instagram_tienda'], 
-        twitter_tienda=body['twitter_tienda'],zona_general=body['zona_general'],zona_uno=body['zona_uno'],zona_dos=body['zona_dos'],zona_tres=body['zona_tres'])
+        twitter_tienda=body['twitter_tienda'],zona_general=body['zona_general'],zona_uno=body['zona_uno'],zona_dos=body['zona_dos'],zona_tres=body['zona_tres'],usuario_id=body['usuario_id'])
         #   agregar a la sesión de base de datos (sqlalchemy) y hacer commit de la transacción
         print("imprimiento")
         print (jsonify(tienda.serialize()))

@@ -31,7 +31,7 @@ class Usuario(db.Model):
     suscripciones = db.relationship("Suscripcion", backref="usuario") 
     fecha_registro = db.Column(db.Date())
 
-    #usuario_id = db.relationship("Tienda", backref="usuario", uselist=False)
+    usuario_id = db.relationship("Tienda", backref="usuario", uselist=False)
     #usuario_id = db.relationship("Suscripcion", backref="usuario", uselist=False)
     #usuario_id = db.relationship("Calificacion", backref="usuario", uselist=False)
 
@@ -200,7 +200,8 @@ class Suscripcion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     plan = db.Column(db.Enum(Planes), nullable=False)
     fecha_registro = db.Column(db.Date())
-    usuario_id = db.Column(db.Integer, ForeignKey('usuario.id'))
+    #usuario_id = db.Column(db.Integer, ForeignKey('usuario.id'))
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
 
 
     def __init__(self, plan, nombre_tienda):
@@ -257,59 +258,6 @@ class Suscripcion(db.Model):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        """
-            normalizacion de nombre foto, etc...
-            crea un objeto de la clase tienda con
-            esa normalizacion y devuelve la instancia creada.
-        """
-        nuevo_tienda = cls(
-            nombre_tienda,
-            correo_tienda,
-            telefono_tienda,
-            foto_tienda,
-            facebook_tienda,
-            instagram_tienda,
-            twitter_tienda,
-            zona_general,
-            zona_uno,
-            zona_dos,
-            zona_tres
-        )
-        return nuevo_tienda 
 
 ########################191
 #
@@ -370,11 +318,11 @@ class Tienda(db.Model):
     zona_dos = db.Column(db.Enum(Zona), nullable=True)
     zona_tres = db.Column(db.Enum(Zona), nullable=True) 
     productos = db.relationship("Producto", backref="tienda") 
-
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
 
 
     def __init__(self, nombre_tienda, correo_tienda, telefono_tienda, foto_tienda, facebook_tienda, 
-    instagram_tienda, twitter_tienda, zona_general, zona_uno, zona_dos, zona_tres):
+    instagram_tienda, twitter_tienda, zona_general, zona_uno, zona_dos, zona_tres, usuario_id):
         self.nombre_tienda = nombre_tienda
         self.correo_tienda = correo_tienda
         self.telefono_tienda = telefono_tienda
@@ -385,11 +333,12 @@ class Tienda(db.Model):
         self.zona_general = Zona_general(zona_general)
         self.zona_uno = Zona(zona_uno) if zona_uno else None
         self.zona_dos = Zona(zona_dos) if zona_dos else None
-        self.zona_tres = Zona(zona_tres) if zona_tres else None 
+        self.zona_tres = Zona(zona_tres) if zona_tres else None
+        self.usuario_id = usuario_id
 
     @classmethod
     def nuevo(cls, nombre_tienda, correo_tienda, telefono_tienda, foto_tienda, facebook_tienda, 
-    instagram_tienda, twitter_tienda, zona_general, zona_uno, zona_dos, zona_tres):
+    instagram_tienda, twitter_tienda, zona_general, zona_uno, zona_dos, zona_tres,usuario_id):
 
         """
             normalizacion de nombre foto, etc...
@@ -407,9 +356,11 @@ class Tienda(db.Model):
             zona_general,
             zona_uno,
             zona_dos,
-            zona_tres
+            zona_tres,
+            usuario_id
         )
         return nuevo_tienda 
+
 
     def update(self, diccionario):
         """Actualizacion de producto"""
@@ -461,10 +412,15 @@ class Tienda(db.Model):
             "zona_uno": self.zona_uno.value if self.zona_uno else "",
             "zona_dos": self.zona_dos.value if self.zona_dos else "",
             "zona_tres": self.zona_tres.value if self.zona_tres else "",
+<<<<<<< HEAD
+            "usuario_id": self.usuario_id,
+            "producto": lista_id
+=======
             "productos": lista_id
+>>>>>>> develop
             # "groups": [subscription.group_id for subscription in self.subscriptions] ayuda para etiqueta
             }    
-             
+
 
 
 ########################136
