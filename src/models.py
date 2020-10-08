@@ -29,9 +29,10 @@ class Usuario(db.Model):
     administrador = db.Column(db.Boolean(), unique=False, nullable=False)
     suscripcion = db.Column(db.Integer, unique=False, nullable=True)
     suscripciones = db.relationship("Suscripcion", backref="usuario") 
+    tienda = db.relationship("Tienda", backref="usuario") 
     fecha_registro = db.Column(db.Date())
 
-    usuario_id = db.relationship("Tienda", backref="usuario", uselist=False)
+    #usuario_id = db.relationship("Tienda", backref="usuario", uselist=False)
     #usuario_id = db.relationship("Suscripcion", backref="usuario", uselist=False)
     #usuario_id = db.relationship("Calificacion", backref="usuario", uselist=False)
 
@@ -71,6 +72,53 @@ class Usuario(db.Model):
     def __repr__(self):
         return '<Usuario %r>' % self.correo
 
+
+    @classmethod
+    def cargar(cls):
+        """
+            abre el archivo usuario.json y carga en la 
+            variable usuarios objetos usuario para cada
+            uno de los diccionarios de la lista
+        """
+        usuario = []
+        try:
+            with open("./usuario.json", "r") as usuario_archivo:
+                usuario_diccionarios = json.load(usuario_archivo)
+                for usuario in usuario_diccionarios:
+                    nuevo_usuario = cls.registrarse(
+                        usuario["nombre"],
+                        usuario["apellido"],
+                        usuario["nombre_usuario"],
+                        usuario["fecha_nacimiento"],
+                        usuario["correo"],
+                        usuario["telefono"],
+                        usuario["clave"],
+                        usuario["foto_perfil"],
+                        usuario["administrador"],
+                        usuario["suscripcion"]
+                    )
+                    usuario.append(nuevo_usuario)
+        except:
+            with open("./usuario.json", "w") as usuario_archivo:
+                pass
+        return usuario
+
+    @staticmethod
+    def salvar(usuarios):
+        """
+            guarda usuario en formato json en el archivo
+            correspondiente
+        """
+        with open("./usuario.json", "w") as usuario_archivo:
+            usuarios_serializados = []
+            for usuario in usuarios:
+                usuarios_serializados.append(Usuario.serializar())
+            json.dump(usuarios_serializados, usuario_archivo)
+
+
+
+
+
     @classmethod
     def registrarse(cls, nombre, apellido, nombre_usuario, fecha_nacimiento, correo, telefono, clave, foto_perfil, administrador, suscripcion):
         """
@@ -99,6 +147,12 @@ class Usuario(db.Model):
 
     def serializar(self):
 
+        tienda_list = self.tienda
+        lista_id = []
+        for tienda in tienda_list:
+            lista_id.append(tienda.nombre_tienda),
+            lista_id.append(tienda.id)
+
         date_str = str(self.fecha_nacimiento)
         date_object = datetime.strptime(date_str, '%Y-%m-%d').date()
 
@@ -117,7 +171,8 @@ class Usuario(db.Model):
             "foto_perfil":self.foto_perfil,
             "suscripcion":self.suscripcion, 
             "administrador":self.administrador,
-            "fecha_registro":datereg_str
+            "fecha_registro":datereg_str,
+            "tienda": lista_id
         }
 
 
@@ -200,25 +255,26 @@ class Suscripcion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     plan = db.Column(db.Enum(Planes), nullable=False)
     fecha_registro = db.Column(db.Date())
-    #usuario_id = db.Column(db.Integer, ForeignKey('usuario.id'))
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    usuario_id = db.Column(db.Integer, ForeignKey('usuario.id'))
 
 
     def __init__(self, plan, nombre_tienda):
         self.plan = Planes(plan),
         self.fecha_registro = date.today()
+        self.usuario_id = usuario_id
         # self.nombre_tienda = Tienda(nombre_tienda)
 
 
     @classmethod
-    def nuevo_sub(cls, plan):
+    def nuevo_sub(cls, plan, usuario_id):
         """
             normalizacion de nombre foto, etc...
             crea un objeto de la clase Suscripcion con
             esa normalizacion y devuelve la instancia creada.
         """
         nuevo_suscriptor = cls(
-            plan
+            plan,
+            usuario_id
         )
         return nuevo_suscriptor 
 
@@ -239,7 +295,8 @@ class Suscripcion(db.Model):
         return {
             "id": self.id,
             "plan": self.plan.value,
-            "fecha_registro":datereg_str
+            "fecha_registro":datereg_str,
+            "usuario_id": self.usuario_id
             # 'tienda': self.tienda.nombre_tienda
             # "tienda": [self.tienda.nombre_tienda]
         }
@@ -258,6 +315,59 @@ class Suscripcion(db.Model):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        """
+            normalizacion de nombre foto, etc...
+            crea un objeto de la clase tienda con
+            esa normalizacion y devuelve la instancia creada.
+        """
+        nuevo_tienda = cls(
+            nombre_tienda,
+            correo_tienda,
+            telefono_tienda,
+            foto_tienda,
+            facebook_tienda,
+            instagram_tienda,
+            twitter_tienda,
+            zona_general,
+            zona_uno,
+            zona_dos,
+            zona_tres
+        )
+        return nuevo_tienda 
 
 ########################191
 #
@@ -318,7 +428,8 @@ class Tienda(db.Model):
     zona_dos = db.Column(db.Enum(Zona), nullable=True)
     zona_tres = db.Column(db.Enum(Zona), nullable=True) 
     productos = db.relationship("Producto", backref="tienda") 
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuario.id"), nullable=False)
+    usuario_id = db.Column(db.Integer, ForeignKey('usuario.id'))
+
 
 
     def __init__(self, nombre_tienda, correo_tienda, telefono_tienda, foto_tienda, facebook_tienda, 
@@ -333,12 +444,58 @@ class Tienda(db.Model):
         self.zona_general = Zona_general(zona_general)
         self.zona_uno = Zona(zona_uno) if zona_uno else None
         self.zona_dos = Zona(zona_dos) if zona_dos else None
-        self.zona_tres = Zona(zona_tres) if zona_tres else None
+        self.zona_tres = Zona(zona_tres) if zona_tres else None 
         self.usuario_id = usuario_id
+
+
+    @classmethod
+    def cargar(cls):
+        """
+            abre el archivo donante.json y carga en la 
+            variable donantes objetos donante para cada
+            uno de los diccionarios de la lista
+        """
+        tienda = []
+        try:
+            with open("./tienda.json", "r") as tienda_archivo:
+                tiendas_diccionarios = json.load(tienda_archivo)
+                for tienda in tiendas_diccionarios:
+                    nuevo_tienda = cls.nuevo(
+                        tienda["nombre_tienda"],
+                        tienda["correo_tienda"],
+                        tienda["telefono_tienda"],
+                        tienda["foto_tienda"],
+                        tienda["facebook_tienda"],
+                        tienda["instagram_tienda"],
+                        tienda["twitter_tienda"],
+                        tienda["zona_general"],
+                        tienda["zona_uno"],
+                        tienda["zona_dos"],
+                        tienda["zona_tres"],
+                        tienda["usuario_id"]
+                    )
+                    tienda.append(nuevo_tienda)
+        except:
+            with open("./tienda.json", "w") as tienda_archivo:
+                pass
+        return tienda
+
+    @staticmethod
+    def salvar(tiendas):
+        """
+            guarda tienda en formato json en el archivo
+            correspondiente
+        """
+        with open("./tienda.json", "w") as tienda_archivo:
+            tiendas_serializados = []
+            for tienda in tiendas:
+                tiendas_serializados.append(Tienda.serialize())
+            json.dump(tiendas_serializados, tienda_archivo)
+
 
     @classmethod
     def nuevo(cls, nombre_tienda, correo_tienda, telefono_tienda, foto_tienda, facebook_tienda, 
-    instagram_tienda, twitter_tienda, zona_general, zona_uno, zona_dos, zona_tres,usuario_id):
+    instagram_tienda, twitter_tienda, zona_general, zona_uno, zona_dos, zona_tres, usuario_id):
 
         """
             normalizacion de nombre foto, etc...
@@ -360,7 +517,6 @@ class Tienda(db.Model):
             usuario_id
         )
         return nuevo_tienda 
-
 
     def update(self, diccionario):
         """Actualizacion de producto"""
@@ -397,7 +553,8 @@ class Tienda(db.Model):
         producto_list = self.productos
         lista_id = []
         for producto in producto_list:
-            lista_id.append(producto.titulo)
+            lista_id.append(producto.titulo),
+            lista_id.append(producto.id)
 
         return {
             "id": self.id,
@@ -412,9 +569,38 @@ class Tienda(db.Model):
             "zona_uno": self.zona_uno.value if self.zona_uno else "",
             "zona_dos": self.zona_dos.value if self.zona_dos else "",
             "zona_tres": self.zona_tres.value if self.zona_tres else "",
-            "productos": lista_id
+            "productos": lista_id,
+            "usuario_id": self.usuario_id,
+            "usuario_nombre": self.usuario.nombre
             # "groups": [subscription.group_id for subscription in self.subscriptions] ayuda para etiqueta
             }    
+             
+    def serializer(self):
+
+        producto_list = self.productos
+        lista_id = []
+        for producto in producto_list:
+            lista_id.append(producto.titulo),
+            lista_id.append(producto.id)
+
+        return {
+            "id": self.id,
+            "nombre_tienda": self.nombre_tienda,
+            "correo_tienda": self.correo_tienda,
+            "telefono_tienda": self.telefono_tienda,
+            "foto_tienda": self.foto_tienda,
+            "facebook_tienda": self.facebook_tienda,
+            "instagram_tienda": self.instagram_tienda,
+            "twitter_tienda": self.twitter_tienda,
+            "zona_general": self.zona_general.value,
+            "zona_uno": self.zona_uno.value if self.zona_uno else "",
+            "zona_dos": self.zona_dos.value if self.zona_dos else "",
+            "zona_tres": self.zona_tres.value if self.zona_tres else "",
+            "productos": lista_id,
+            "usuario_id": self.usuario_id
+            }
+
+
 
 
 
@@ -471,6 +657,50 @@ class Producto(db.Model):
         self.etiqueta_dos = Etiqueta(etiqueta_dos) if etiqueta_dos else None
         self.etiqueta_tres = Etiqueta(etiqueta_tres) if etiqueta_tres else None 
         self.tienda_id = tienda_id  
+
+
+    @classmethod
+    def cargar(cls):
+        """
+            abre el archivo producto.json y carga en la 
+            variable productos objetos producto para cada
+            uno de los diccionarios de la lista
+        """
+        producto = []
+        try:
+            with open("./producto.json", "r") as producto_archivo:
+                producto_diccionarios = json.load(producto_archivo)
+                for producto in producto_diccionarios:
+                    nuevo_producto = cls.nuevo(
+                        producto["titulo"],
+                        producto["foto"],
+                        producto["descripcion"],
+                        producto["precio"],
+                        producto["cantidad"],
+                        producto["etiqueta_general"],
+                        producto["etiqueta_uno"],
+                        producto["etiqueta_dos"],
+                        producto["etiqueta_tres"],
+                        producto["tienda_id"]
+                    )
+                    producto.append(nuevo_producto)
+        except:
+            with open("./producto.json", "w") as producto_archivo:
+                pass
+        return producto
+
+    @staticmethod
+    def salvar(productos):
+        """
+            guarda producto en formato json en el archivo
+            correspondiente
+        """
+        with open("./producto.json", "w") as producto_archivo:
+            productos_serializados = []
+            for producto in productos:
+                productos_serializados.append(Producto.serialize())
+            json.dump(productos_serializados, producto_archivo)
+
 
     @classmethod
     def nuevo(cls, titulo, foto, descripcion, precio, cantidad, etiqueta_general, etiqueta_uno, etiqueta_dos, etiqueta_tres, tienda_id):
@@ -571,7 +801,8 @@ class Producto(db.Model):
             "etiqueta_uno": self.etiqueta_uno.value,
             "etiqueta_dos": self.etiqueta_dos.value if self.etiqueta_dos else "",         
             "etiqueta_tres": self.etiqueta_tres.value if self.etiqueta_tres else "",
-            "tienda": self.tienda.nombre_tienda
+            "tienda": self.tienda.nombre_tienda,
+            "tienda_id": self.tienda_id
         }          
             # "tienda": 
             # aqui en tienda serializo el nombre de la tienda osea de la tabla tienda nono yo le quito list
@@ -610,7 +841,3 @@ class Producto(db.Model):
 #    Calificacion
 #
 ########################
-
-
-
-  
