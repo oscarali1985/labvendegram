@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 4d1c733a344b
+Revision ID: e1f31e3529b7
 Revises: 
-Create Date: 2020-10-06 00:35:48.676898
+Create Date: 2020-10-12 19:44:11.278698
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '4d1c733a344b'
+revision = 'e1f31e3529b7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,7 +40,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('plan', sa.Enum('BASICO', name='planes'), nullable=False),
     sa.Column('fecha_registro', sa.Date(), nullable=True),
-    sa.Column('usuario_id', sa.Integer(), nullable=False),
+    sa.Column('usuario_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['usuario_id'], ['usuario.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -57,7 +57,7 @@ def upgrade():
     sa.Column('zona_uno', sa.Enum('ALTAGRACIA', 'ANTÍMANO', 'CANDELARIA', 'CARICUAO', 'CATEDRAL', 'CATIA', 'CAUCAGÜITA', 'CHACAO', 'COCHE', 'EL_CAFETAL', 'EL_JUNQUITO', 'EL_PARAÍSO', 'EL_RECREO', 'EL_VALLE', 'FILA_DE_MARICHES', 'LA_DOLORITA', 'LA_PASTORA', 'LA_VEGA', 'LAS_MINAS', 'LEONCIO_MARTÍNEZ', 'MACARAO', 'NUESTRA_SEÑORA_DEL_ROSARIO', 'PETARE', 'SAN_AGUSTÍN', 'SAN_BERNARDINO', 'SAN_JOSÉ', 'SAN_JUAN', 'SAN_PEDRO', 'SANTA_ROSALÍA', 'SANTA_ROSALÍA_DE_PALERMO', 'SANTA_TERESA', 'VEINTITRÉS_DE_ENERO', name='zona'), nullable=True),
     sa.Column('zona_dos', sa.Enum('ALTAGRACIA', 'ANTÍMANO', 'CANDELARIA', 'CARICUAO', 'CATEDRAL', 'CATIA', 'CAUCAGÜITA', 'CHACAO', 'COCHE', 'EL_CAFETAL', 'EL_JUNQUITO', 'EL_PARAÍSO', 'EL_RECREO', 'EL_VALLE', 'FILA_DE_MARICHES', 'LA_DOLORITA', 'LA_PASTORA', 'LA_VEGA', 'LAS_MINAS', 'LEONCIO_MARTÍNEZ', 'MACARAO', 'NUESTRA_SEÑORA_DEL_ROSARIO', 'PETARE', 'SAN_AGUSTÍN', 'SAN_BERNARDINO', 'SAN_JOSÉ', 'SAN_JUAN', 'SAN_PEDRO', 'SANTA_ROSALÍA', 'SANTA_ROSALÍA_DE_PALERMO', 'SANTA_TERESA', 'VEINTITRÉS_DE_ENERO', name='zona'), nullable=True),
     sa.Column('zona_tres', sa.Enum('ALTAGRACIA', 'ANTÍMANO', 'CANDELARIA', 'CARICUAO', 'CATEDRAL', 'CATIA', 'CAUCAGÜITA', 'CHACAO', 'COCHE', 'EL_CAFETAL', 'EL_JUNQUITO', 'EL_PARAÍSO', 'EL_RECREO', 'EL_VALLE', 'FILA_DE_MARICHES', 'LA_DOLORITA', 'LA_PASTORA', 'LA_VEGA', 'LAS_MINAS', 'LEONCIO_MARTÍNEZ', 'MACARAO', 'NUESTRA_SEÑORA_DEL_ROSARIO', 'PETARE', 'SAN_AGUSTÍN', 'SAN_BERNARDINO', 'SAN_JOSÉ', 'SAN_JUAN', 'SAN_PEDRO', 'SANTA_ROSALÍA', 'SANTA_ROSALÍA_DE_PALERMO', 'SANTA_TERESA', 'VEINTITRÉS_DE_ENERO', name='zona'), nullable=True),
-    sa.Column('usuario_id', sa.Integer(), nullable=False),
+    sa.Column('usuario_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['usuario_id'], ['usuario.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('correo_tienda'),
