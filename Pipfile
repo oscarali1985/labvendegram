@@ -20,6 +20,7 @@ mysqlclient = "*"
 flask-admin = "*"
 requests = "*"
 flask-jwt-simple = "*"
+cloudinary = "*"
 
 [requires]
 python_version = "3.8"
