@@ -879,12 +879,15 @@ def actualizar_producto(producto_id):
 def getSpecificproducto(producto_id):
 
     if request.method == "GET":
-        producto = Producto.query.filter(Producto.id == producto_id)
-        producto_list = map(lambda producto: producto.serialize(), producto)
+        #producto = Producto.query.filter(Producto.id == producto_id)
+        producto = Producto.query.filter_by(id=producto_id).one_or_none()
+        print
+        #producto_list = list(map(lambda producto: producto.serialize(), producto))
+        producto_list = producto.serialize()
 
-        if producto_list == []:
+        if producto_list =={} :
             msj="no se encontro el producto ingresada"
-            return jsonify(msj), 200
+            return jsonify(msj), 400
         else:
             return jsonify(producto_list), 200
     else:
