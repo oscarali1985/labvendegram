@@ -796,6 +796,7 @@ def todos_productos():
                 "resultado": "revise los valores de su solicitud"
             }), 400
 
+
 @app.route('/producto', methods=["POST"])
 
 def post_productos():
@@ -873,6 +874,7 @@ def actualizar_producto(producto_id):
             "Presente error al actualizar un producto": f"{error.args}"
         }), 500    
 
+
 @app.route('/producto/<int:producto_id>', methods=["GET"])
 def getSpecificproducto(producto_id):
 
@@ -930,9 +932,12 @@ def getProductosbytienda(tienda_id):
 
 
 
-####################### 914
+
+
+
+########################917
 #
-#    Envoar ccorreo o mensajes telegram
+#    Enviar ccorreo o mensajes telegram
 #
 ########################
 
@@ -973,7 +978,7 @@ def SendTelegram():
         return response
 
 
-########################957
+########################960
 #
 #    Login
 #
@@ -1125,7 +1130,6 @@ def cambioclavealetaria(id):
 
 @app.route("/cambioclavecorreo/<nombre_usuario>", methods=["PUT"])
 
-
 def cambioclavecorreo(nombre_usuario):
     """
         PUT actualizar la clave de un usuario en particular
@@ -1206,7 +1210,7 @@ def cambioclavecorreo(nombre_usuario):
 
 
 
-########################1190
+########################1192
 #
 #    Claudinary
 #
