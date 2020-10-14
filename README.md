@@ -72,7 +72,7 @@ $ heroku login -i
 // Create an application (if you don't have it already)
 $ heroku create <your_application_name>
 // Commit and push to heroku (commited your changes)
-git commit -m "se agrega los ultimos cambios de kislev"
+git commit -m "se modifica la respuesta de producto id"
 $ git push heroku master
 ```
 :warning: For a more detailed explanation on working with .env variables or the MySQL database [read the full guide](https://github.com/4GeeksAcademy/flask-rest-hello/blob/master/docs/DEPLOY_YOUR_APP.md).
