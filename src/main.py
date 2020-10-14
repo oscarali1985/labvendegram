@@ -883,12 +883,14 @@ def getSpecificproducto(producto_id):
         producto = Producto.query.filter_by(id=producto_id).one_or_none()
         print
         #producto_list = list(map(lambda producto: producto.serialize(), producto))
-        producto_list = producto.serialize()
+        producto_list = {}
+        print(producto_list)
 
-        if producto_list =={} :
+        if producto_list == {}:
             msj="no se encontro el producto ingresada"
             return jsonify(msj), 400
         else:
+            producto_list = producto.serialize()
             return jsonify(producto_list), 200
     else:
             response_body = {"msj":"Metodo invalido request"}
