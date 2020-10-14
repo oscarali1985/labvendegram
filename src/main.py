@@ -884,10 +884,11 @@ def getSpecificproducto(producto_id):
         print
         #producto_list = list(map(lambda producto: producto.serialize(), producto))
         producto_list = {}
-        print(producto_list)
+        #print(producto_list)
+        #print(type(producto_list))
 
-        if producto_list == {}:
-            msj="no se encontro el producto ingresada"
+        if not producto  :
+            msj="no se encontro el producto ingresado"
             return jsonify(msj), 400
         else:
             producto_list = producto.serialize()
